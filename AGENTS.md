@@ -1,8 +1,8 @@
 # AGENTS.md — context for future sessions
 
 ## Stack
-- Node.js 20+, ES modules, Express 4.
-- Hosted on Vercel (zero-config Express: `server.js` default-exports the app).
+- Node.js 22.x, ES modules, Express 4.
+- Hosted on Vercel. `vercel.json` builds `server.js` with `@vercel/node` and routes every path to it (no static output dir).
 - Tests: built-in `node:test` (`npm test`). Build check: `npm run build` (syntax check).
 
 ## Layout
@@ -10,6 +10,7 @@
 - `src/page.js` — HTML for the home page (inline CSS/JS, no static folder).
 - `test/` — `node:test` tests.
 - `.env.example` — names of env vars (no values).
+- `vercel.json` — Vercel build + routing config.
 
 ## Rules
 - Never commit secrets. Put them in env vars, list names only in `.env.example`, never print/log them.
