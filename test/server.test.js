@@ -22,6 +22,24 @@ test("home page says Hello Latvia and has the navbar", async () => {
   }
 });
 
+test("navbar has the UNICLOTHES wordmark, theme toggle and favicon", async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<span class="brand">UNICLOTHES<\/span>/);
+  assert.match(html, /class="theme-toggle"/);
+  assert.match(html, /id="favicon"/);
+});
+
+test("light and dark favicons are served", async () => {
+  for (const [theme, color] of [["light", "#000000"], ["dark", "#ffffff"]]) {
+    const res = await fetch(`${base}/favicon-${theme}.svg`);
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type"), /image\/svg\+xml/);
+    const svg = await res.text();
+    assert.ok(svg.includes(`fill="${color}"`), `${theme} favicon should be ${color}`);
+    assert.ok(svg.includes('xmlns="http://www.w3.org/2000/svg"'));
+  }
+});
+
 test("every nav link resolves", async () => {
   for (const path of ["/market", "/about", "/contact", "/register", "/cart"]) {
     const res = await fetch(`${base}${path}`);

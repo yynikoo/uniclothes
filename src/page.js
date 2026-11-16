@@ -41,11 +41,19 @@ const styles = `
     --pill-bg: rgb(0 0 0 / .07);
     --red: #9E3039;
   }
+  /* Dark theme: chosen with the toggle (data-theme="dark"), or from the system when nothing is chosen. */
+  :root[data-theme="dark"] {
+    --bg: #0b0b0c; --fg: #f4f4f5; --muted: #a1a1aa;
+    --btn-bg: #ffffff; --btn-fg: #000000;
+    --pill-bg: rgb(255 255 255 / .12);
+    color-scheme: dark;
+  }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --bg: #0b0b0c; --fg: #f4f4f5; --muted: #a1a1aa;
       --btn-bg: #ffffff; --btn-fg: #000000;
       --pill-bg: rgb(255 255 255 / .12);
+      color-scheme: dark;
     }
   }
   * { box-sizing: border-box; }
@@ -60,7 +68,7 @@ const styles = `
   /* ---------- Liquid glass navbar ---------- */
   .nav {
     position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
-    width: min(740px, calc(100% - 32px));
+    width: min(860px, calc(100% - 32px));
     display: flex; align-items: center; gap: 14px;
     padding: 6px 8px 6px 12px; border-radius: 999px;
     isolation: isolate; view-transition-name: nav;
@@ -73,8 +81,27 @@ const styles = `
     -webkit-backdrop-filter: url(#liquid-glass) blur(3px) saturate(190%);
     backdrop-filter: url(#liquid-glass) blur(3px) saturate(190%);
   }
-  .nav-logo { display: flex; align-items: center; flex: none; transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
-  .nav-logo:hover { transform: rotate(-8deg) scale(1.08); }
+  .nav-logo { display: flex; align-items: center; gap: 8px; flex: none; }
+  .nav-logo svg { transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+  .nav-logo:hover svg { transform: rotate(-8deg) scale(1.08); }
+  .brand { font-weight: 600; font-size: 1.05rem; letter-spacing: .06em; }
+
+  /* Theme toggle: round see-through button with a moon (light theme) or sun (dark theme). */
+  .theme-toggle {
+    display: grid; place-items: center; width: 32px; height: 32px; flex: none;
+    border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; padding: 0;
+    transition: transform .3s cubic-bezier(.34,1.56,.64,1), background-color .2s;
+  }
+  .theme-toggle:hover { background: var(--pill-bg); transform: rotate(-15deg); }
+  .theme-toggle:active { transform: scale(.88); }
+  .theme-toggle svg { width: 20px; height: 20px; }
+  .theme-toggle .sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .sun { display: block; }
+  :root[data-theme="dark"] .theme-toggle .moon { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .sun { display: block; }
+    :root:not([data-theme="light"]) .theme-toggle .moon { display: none; }
+  }
 
   .nav-links { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
   .nav-links::-webkit-scrollbar { display: none; }
@@ -109,6 +136,8 @@ const styles = `
     .nav { gap: 8px; padding: 6px 6px 6px 10px; }
     .nav-links a { font-size: 1rem; padding: 2px 9px; }
     .btn { font-size: .8rem; padding: 4px 10px; }
+    .brand { display: none; }
+    .theme-toggle { width: 28px; height: 28px; }
     /* Links scroll sideways on small screens; fade the edge so that's visible. */
     .nav-links { mask-image: linear-gradient(to right, #000 85%, transparent); padding-right: 16px; }
   }
@@ -124,6 +153,15 @@ const styles = `
   ::view-transition-new(root) { animation: page-in .38s cubic-bezier(.2,.8,.2,1) both; }
   @keyframes page-out { to { opacity: 0; transform: translateY(-8px); filter: blur(4px); } }
   @keyframes page-in { from { opacity: 0; transform: translateY(12px); filter: blur(6px); } }
+
+  /* Theme switch: the new theme grows as a circle out of the toggle button. */
+  html.theme-switch .nav, html.theme-switch .pill { view-transition-name: none; }
+  html.theme-switch::view-transition-old(root) { animation: none; }
+  html.theme-switch::view-transition-new(root) { animation: theme-reveal .55s cubic-bezier(.4,0,.2,1); }
+  @keyframes theme-reveal {
+    from { clip-path: circle(0 at var(--tx, 50%) var(--ty, 0)); }
+    to { clip-path: circle(150vmax at var(--tx, 50%) var(--ty, 0)); }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     @view-transition { navigation: none; }
@@ -150,11 +188,23 @@ const styles = `
   @keyframes pop { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
 `;
 
-// Runs in <head> before first paint: turns on the liquid filter in Chromium (other engines
-// don't support SVG filters in backdrop-filter) and skips the home loader after the first visit.
+// Runs in <head> before first paint: applies the saved theme and matching favicon (no flash),
+// turns on the liquid filter in Chromium (other engines don't support SVG filters in
+// backdrop-filter) and skips the home loader after the first visit.
 const headScript = `<script>
   (function () {
     var d = document.documentElement;
+    var mq = matchMedia("(prefers-color-scheme: dark)");
+    var saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) {}
+    if (saved === "light" || saved === "dark") d.dataset.theme = saved;
+    window.currentTheme = function () { return d.dataset.theme || (mq.matches ? "dark" : "light"); };
+    window.syncFavicon = function () {
+      var icon = document.getElementById("favicon");
+      if (icon) icon.href = "/favicon-" + window.currentTheme() + ".svg";
+    };
+    window.syncFavicon();
+    mq.addEventListener("change", window.syncFavicon);
     if (window.chrome && !/Firefox/.test(navigator.userAgent)) d.classList.add("liquid");
     try { if (sessionStorage.getItem("seenLoader")) d.classList.add("ready"); } catch (e) {}
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -164,6 +214,40 @@ const headScript = `<script>
     }
   })();
 </script>`;
+
+// Theme toggle: flips light/dark, remembers the choice, swaps the favicon, and animates the
+// switch with a circular reveal where View Transitions are supported.
+const themeScript = `<script>
+  (function () {
+    var d = document.documentElement;
+    var btn = document.querySelector(".theme-toggle");
+    function label() {
+      btn.setAttribute("aria-label", window.currentTheme() === "dark" ? "Switch to light theme" : "Switch to dark theme");
+    }
+    label();
+    btn.addEventListener("click", function () {
+      var next = window.currentTheme() === "dark" ? "light" : "dark";
+      function apply() {
+        d.dataset.theme = next;
+        try { localStorage.setItem("theme", next); } catch (e) {}
+        window.syncFavicon();
+        label();
+      }
+      var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!document.startViewTransition || reduce) return apply();
+      var r = btn.getBoundingClientRect();
+      d.style.setProperty("--tx", (r.left + r.width / 2) + "px");
+      d.style.setProperty("--ty", (r.top + r.height / 2) + "px");
+      d.classList.add("theme-switch");
+      var vt = document.startViewTransition(apply);
+      vt.ready.catch(function () {}); // skipped animation (e.g. tab hidden); the theme still applies
+      vt.finished.finally(function () { d.classList.remove("theme-switch"); });
+    });
+  })();
+</script>`;
+
+const moonSvg = `<svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 14.5A9 9 0 0 1 9.5 3a.6.6 0 0 0-.8-.7A10 10 0 1 0 21.7 15.3a.6.6 0 0 0-.7-.8z"/></svg>`;
+const sunSvg = `<svg class="sun" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5" fill="currentColor" stroke="none"/><path d="M12 1.5v2.5M12 20v2.5M1.5 12H4M20 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg>`;
 
 function nav(currentPath) {
   const links = navLinks
@@ -176,9 +260,12 @@ function nav(currentPath) {
   const btn = (href, label) =>
     `<a class="btn" href="${href}"${href === currentPath ? ' aria-current="page"' : ""}>${label}</a>`;
   return `<header class="nav">
-    <a class="nav-logo" href="/" aria-label="uniclothes home">${logoSvg}</a>
+    <a class="nav-logo" href="/" aria-label="UNICLOTHES home">${logoSvg}<span class="brand">UNICLOTHES</span></a>
     <nav class="nav-links" aria-label="Main">${links}</nav>
-    <div class="nav-actions">${btn("/register", "Register")}${btn("/cart", "Cart")}</div>
+    <div class="nav-actions">
+      <button class="theme-toggle" type="button" aria-label="Switch theme">${moonSvg}${sunSvg}</button>
+      ${btn("/register", "Register")}${btn("/cart", "Cart")}
+    </div>
   </header>`;
 }
 
@@ -189,6 +276,7 @@ function layout({ title, currentPath, body }) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${title}</title>
+  <link rel="icon" id="favicon" type="image/svg+xml" href="/favicon-light.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
@@ -199,13 +287,14 @@ function layout({ title, currentPath, body }) {
   ${liquidFilterSvg}
   ${nav(currentPath)}
   ${body}
+  ${themeScript}
 </body>
 </html>`;
 }
 
 export function renderHome() {
   return layout({
-    title: "uniclothes",
+    title: "UNICLOTHES",
     currentPath: "/",
     body: `<main>
     <div class="loader" role="status">
@@ -241,7 +330,7 @@ export const placeholderPages = {
 export function renderPlaceholder(path) {
   const title = placeholderPages[path];
   return layout({
-    title: `${title} · uniclothes`,
+    title: `${title} · UNICLOTHES`,
     currentPath: path,
     body: `<main><div><h1>${title}</h1><p class="muted">Coming soon.</p></div></main>`,
   });
