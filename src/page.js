@@ -7,6 +7,7 @@
 // one and fade the page content. Browsers without View Transitions just load the page normally.
 import { logoSvg } from "./logo.js";
 import { sha256Source, zeroBitsSource } from "./sha256.js";
+import { shapeWavesClient } from "./shape-waves.js";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -169,9 +170,30 @@ const styles = `
     *, *::before, *::after { transition: none !important; }
   }
 
+  /* ---------- Home hero (ShapeWaves) ---------- */
+  .hero { position: relative; height: 100vh; height: 100svh; overflow: hidden; background: var(--bg); }
+  .shape-waves {
+    position: absolute; inset: 0; overflow: hidden; pointer-events: none; isolation: isolate;
+    background: var(--bg);
+  }
+  .shape-waves canvas {
+    position: absolute; inset: 0; display: block; width: 100%; height: 100%;
+    opacity: 0; transition: opacity 600ms cubic-bezier(.22,1,.36,1); pointer-events: none;
+  }
+  .shape-waves[data-ready="true"] canvas { opacity: 1; }
+  /* Title is for screen readers; it becomes visible only if WebGPU isn't available. */
+  .hero-title {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0;
+  }
+  .hero:has(.shape-waves[data-fallback="true"]) .hero-title {
+    position: absolute; inset: 0; width: auto; height: auto; clip-path: none; margin: auto;
+    display: grid; place-items: center; font-size: clamp(2.6rem, 11vw, 7.5rem); letter-spacing: .04em;
+  }
+  @media (prefers-reduced-motion: reduce) { .shape-waves canvas { transition: none; } }
+
   /* ---------- Page content ---------- */
   main { position: relative; z-index: 1; min-height: 100vh; display: grid; place-items: center; padding: 96px 16px 32px; text-align: center; }
-  h1 { font-size: clamp(2.2rem, 8vw, 4.5rem); margin: 0 0 16px; font-weight: 600; }
+  h1, .hello-title { font-size: clamp(2.2rem, 8vw, 4.5rem); margin: 0 0 16px; font-weight: 600; }
   .muted { color: var(--muted); }
 
   /* Home loading animation (first visit in a session only) */
@@ -293,17 +315,49 @@ function layout({ title, currentPath, body }) {
 </html>`;
 }
 
+// Home hero: ShapeWaves field with "UNICLOTHES" carved out. Settings from the React Bits example;
+// colours per theme (light = white field, dark = original look on the site's dark background).
+const shapeWavesOptions = {
+  id: "shape-waves",
+  text: "UNICLOTHES",
+  fontFamily: '"Prompt", system-ui, sans-serif',
+  fontWeight: 600,
+  textSize: 0.48,
+  shapes: "mixed",
+  cellSize: 6,
+  dotSize: 1,
+  speed: 1,
+  scale: 1,
+  contrast: 1,
+  brightness: 0.4,
+  flow: 0,
+  direction: 0,
+  fade: 0.25,
+  interactive: true,
+  splashRadius: 40,
+  splashStrength: 0.4,
+  intro: true,
+  introDuration: 2.3,
+  light: { background: "#ffffff", color: "#929292", hover: "#000000", glow: 0 },
+  dark: { background: "#0b0b0c", color: "#929292", hover: "#ffffff", glow: 0.35 },
+};
+
 export function renderHome() {
   return layout({
     title: "UNICLOTHES",
     currentPath: "/",
-    body: `<main>
+    body: `<section class="hero">
+    <div class="shape-waves" id="shape-waves" aria-hidden="true"><canvas></canvas></div>
+    <h1 class="hero-title">UNICLOTHES</h1>
+  </section>
+  <script>(${shapeWavesClient.toString()})(${JSON.stringify(shapeWavesOptions)});</script>
+  <main>
     <div class="loader" role="status">
       <div class="spinner"></div>
       <div>Loading…</div>
     </div>
     <div class="hello">
-      <h1>Hello Latvia 🇱🇻</h1>
+      <h2 class="hello-title">Hello Latvia 🇱🇻</h2>
       ${flagSvg}
     </div>
   </main>

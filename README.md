@@ -1,6 +1,6 @@
 # uniclothes
 
-A Node.js (Express) website for the uniclothes shop. Right now it has a liquid-glass navbar (UNICLOTHES logo, Home, Market, About, Contact Us, light/dark theme toggle, Register, Cart) and a home page that shows a short loading animation and then "Hello Latvia 🇱🇻". The other pages are placeholders.
+A Node.js (Express) website for the uniclothes shop. Right now it has a liquid-glass navbar (UNICLOTHES logo, Home, Market, About, Contact Us, light/dark theme toggle, Register, Cart) and a home page with an animated ShapeWaves hero (WebGPU) that carves out "UNICLOTHES", then a short loading animation and then "Hello Latvia 🇱🇻". The other pages are placeholders.
 
 ## Run locally
 

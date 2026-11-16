@@ -40,6 +40,20 @@ test("light and dark favicons are served", async () => {
   }
 });
 
+test("home has the ShapeWaves hero with UNICLOTHES carved out", async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<div class="shape-waves" id="shape-waves"/);
+  assert.match(html, /<h1 class="hero-title">UNICLOTHES<\/h1>/);
+  assert.match(html, /function shapeWavesClient/);
+  assert.match(html, /"text":"UNICLOTHES"/);
+  assert.ok(!/<\/script/i.test(html.split("function shapeWavesClient")[1].split("</script>")[0]), "inline script must not close early");
+});
+
+test("ShapeWaves client source parses as JavaScript", async () => {
+  const { shapeWavesClient } = await import("../src/shape-waves.js");
+  assert.doesNotThrow(() => new Function(`return (${shapeWavesClient.toString()});`));
+});
+
 test("every nav link resolves", async () => {
   for (const path of ["/market", "/about", "/contact", "/register", "/cart"]) {
     const res = await fetch(`${base}${path}`);
