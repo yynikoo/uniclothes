@@ -1,13 +1,14 @@
 import express from "express";
 import { renderHome, renderPlaceholder, renderCheck, placeholderPages } from "./src/page.js";
 import { logoSvg } from "./src/logo.js";
-import { turnstileGate, verifyHandler } from "./src/turnstile.js";
+import { shieldGate, rateLimit, verifyHandler } from "./src/shield.js";
 
 const app = express();
 
-// Cloudflare Turnstile check before the site (only when TURNSTILE_* env vars are set).
-app.use(turnstileGate(renderCheck));
-app.post("/verify", express.json({ limit: "4kb" }), verifyHandler);
+// UNICLOTHES shield: per-IP rate limit always; proof-of-work check when SHIELD_SECRET is set.
+app.post("/shield/verify", rateLimit("verify"), express.json({ limit: "2kb" }), verifyHandler);
+app.use(rateLimit("page"));
+app.use(shieldGate(renderCheck));
 
 // Favicons: the logo in black (light theme) or white (dark theme). Pages pick one to match the theme.
 const favicon = (color) =>

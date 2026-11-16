@@ -21,19 +21,26 @@ Checks: `npm run build` and `npm test`.
 2. Leave Framework preset and build settings as they are: `vercel.json` tells Vercel to run `server.js` as a Node function.
 3. Environment variables: see `.env.example`. None are required for the site to run.
 
-### Cloudflare check (optional)
+### Shield: our own bot protection (optional)
 
-Visitors see a Cloudflare Turnstile "Checking you're human" page before the site, once a day.
-It is off until both keys are set:
+Visitors see a "Checking you're human" page before the site, once a day. Their browser solves a
+small puzzle (about a second), which makes mass requests expensive for bots. Every IP is also
+rate-limited. No third-party service is used.
 
-1. In the Cloudflare dashboard, open **Turnstile → Add widget**. Add your Vercel domain(s) and `localhost`.
-2. In Vercel → Settings → Environment Variables, add `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`
-   (mark the secret as Sensitive), then redeploy.
+It is off until `SHIELD_SECRET` is set:
 
-To try it locally, use Cloudflare's public test keys (they always pass):
+1. Make a long random secret on your own computer:
+   `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+2. In Vercel → Settings → Environment Variables, add `SHIELD_SECRET` with that value
+   (Production only, mark it Sensitive), then redeploy.
+
+Note: big network-level DDoS attacks are stopped by Vercel's platform before they reach this code.
+For an emergency, Vercel's Firewall also has an "Attack Challenge Mode" switch.
+
+To try it locally:
 
 ```bash
-TURNSTILE_SITE_KEY=1x00000000000000000000AA TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA npm start
+SHIELD_SECRET=local-test-secret npm start
 ```
 
 Every push to `main` deploys to production, so `main` must always build.

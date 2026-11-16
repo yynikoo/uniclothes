@@ -6,6 +6,7 @@
 // Tab switching: cross-page View Transitions slide the active "pill" from the old tab to the new
 // one and fade the page content. Browsers without View Transitions just load the page normally.
 import { logoSvg } from "./logo.js";
+import { sha256Source, zeroBitsSource } from "./sha256.js";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -318,7 +319,8 @@ export function renderHome() {
   });
 }
 
-// Cloudflare Turnstile check shown before the site (see src/turnstile.js). Uses the site's theme.
+// Shield check page shown before the site (see src/shield.js). The browser solves a small
+// proof-of-work puzzle, then the server sets a pass cookie and the page reloads into the site.
 const checkStyles = `
   .check { text-align: center; }
   .check-brand { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 28px; }
@@ -326,14 +328,21 @@ const checkStyles = `
   .check-brand .brand { display: inline; font-size: 1.3rem; }
   .check h1 { font-size: clamp(1.6rem, 6vw, 2.2rem); margin: 0 0 8px; }
   .check p { margin: 0 0 24px; }
-  #cf-widget { min-height: 65px; display: flex; justify-content: center; }
+  .progress {
+    width: min(260px, 70vw); height: 6px; margin: 0 auto; border-radius: 999px; overflow: hidden;
+    background: var(--pill-bg);
+  }
+  .progress > div {
+    height: 100%; width: 0; border-radius: inherit; background: var(--fg);
+    transition: width .2s ease-out;
+  }
   #check-msg { margin-top: 16px; min-height: 1.5em; font-size: .95rem; }
   #check-help { margin: 8px 0 0; font-size: .95rem; }
   #check-help a { text-decoration: underline; text-underline-offset: 3px; }
 `;
 
-export function renderCheck(siteKey) {
-  const key = JSON.stringify(siteKey).replace(/</g, "\\u003c");
+export function renderCheck({ challenge, signature, difficulty }) {
+  const data = JSON.stringify({ challenge, signature, difficulty }).replace(/</g, "\\u003c");
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -347,7 +356,6 @@ export function renderCheck(siteKey) {
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
   <style>${styles}${checkStyles}</style>
   ${headScript}
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
 </head>
 <body>
   <main class="check">
@@ -355,36 +363,53 @@ export function renderCheck(siteKey) {
       <div class="check-brand">${logoSvg}<span class="brand">UNICLOTHES</span></div>
       <h1>Checking you're human</h1>
       <p class="muted">This only takes a moment.</p>
-      <div id="cf-widget"></div>
+      <div class="progress" role="progressbar" aria-label="Checking your browser" aria-valuemin="0" aria-valuemax="100">
+        <div id="check-bar"></div>
+      </div>
       <div id="check-msg" class="muted" role="status"></div>
       <p id="check-help" class="muted" hidden>Write <a href="mailto:uniclothessupport@proton.me">uniclothessupport@proton.me</a> for problems.</p>
     </div>
   </main>
   <script>
-    function showMsg(text) { document.getElementById("check-msg").textContent = text; }
-    function showError(text) { showMsg(text); document.getElementById("check-help").hidden = false; }
-    window.onTurnstileLoad = function () {
-      turnstile.render("#cf-widget", {
-        sitekey: ${key},
-        theme: window.currentTheme(),
-        callback: function (token) {
-          showMsg("Verifying…");
-          fetch("/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: token })
-          }).then(function (r) {
-            if (r.ok) { location.reload(); return; }
-            showError("Verification failed. Please try again.");
-            turnstile.reset("#cf-widget");
-          }).catch(function () {
-            showError("Network problem. Please try again.");
-            turnstile.reset("#cf-widget");
-          });
-        },
-        "error-callback": function () { showError("The check couldn't load. Refresh the page to try again."); }
-      });
-    };
+    ${sha256Source}
+    ${zeroBitsSource}
+    (function () {
+      var task = ${data};
+      var bar = document.getElementById("check-bar");
+      var expected = Math.pow(2, task.difficulty); // average attempts needed
+      function showMsg(text) { document.getElementById("check-msg").textContent = text; }
+      function showError(text) { showMsg(text); document.getElementById("check-help").hidden = false; }
+      function setProgress(p) {
+        bar.style.width = p + "%";
+        bar.parentNode.setAttribute("aria-valuenow", String(Math.round(p)));
+      }
+      var nonce = 0;
+      function work() {
+        var stop = nonce + 20000;
+        for (; nonce < stop; nonce++) {
+          if (zeroBits(sha256Hex(task.challenge + ":" + nonce)) >= task.difficulty) return submit(nonce);
+        }
+        // Progress is an estimate: it eases toward 95% based on the average attempts needed.
+        setProgress(95 * (1 - Math.exp(-nonce / expected)));
+        setTimeout(work, 0);
+      }
+      function submit(answer) {
+        setProgress(100);
+        showMsg("Verifying…");
+        fetch("/shield/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ challenge: task.challenge, signature: task.signature, nonce: answer })
+        }).then(function (r) {
+          if (r.ok) { location.reload(); return; }
+          if (r.status === 429) return showError("Too many attempts. Please wait a minute and refresh.");
+          showError("Verification failed. Refresh the page to try again.");
+        }).catch(function () {
+          showError("Network problem. Refresh the page to try again.");
+        });
+      }
+      setTimeout(work, 50);
+    })();
   </script>
   <noscript><p class="muted" style="text-align:center">Please turn on JavaScript to continue.</p></noscript>
 </body>

@@ -6,9 +6,10 @@
 - Tests: built-in `node:test` (`npm test`). Build check: `npm run build` (syntax check).
 
 ## Layout
-- `server.js` — Express app and routes (`/`, `/market`, `/about`, `/contact`, `/register`, `/cart`, `/health`, `/favicon-light.svg`, `/favicon-dark.svg`); listens on `PORT` locally, exported for Vercel. Favicons are the logo recoloured black/white.
+- `server.js` — Express app and routes (`/`, `/market`, `/about`, `/contact`, `/register`, `/cart`, `/health`, `/favicon-light.svg`, `/favicon-dark.svg`, `POST /shield/verify`); listens on `PORT` locally, exported for Vercel. Favicons are the logo recoloured black/white.
 - `src/page.js` — shared layout, home page, placeholder pages (inline CSS/JS, no static folder). Navbar is "liquid glass": fully transparent, backdrop blur, plus an SVG displacement filter (Chromium only, enabled via `html.liquid`). Owner wants NO extra colours, outlines or shadows on it. Navbar shows logo + "UNICLOTHES" wordmark (hidden under 600px) and a theme toggle: light/dark saved in localStorage `theme` (falls back to system), applied as `html[data-theme]` before paint, favicon swapped to match, circular reveal via View Transition. Tab switching uses cross-document View Transitions (`@view-transition`): the active `.pill` slides between tabs and page content fades.
-- `src/turnstile.js` — Cloudflare Turnstile gate: middleware shows the check page (`renderCheck` in page.js) to page requests without a valid `uc_verified` cookie; `POST /verify` checks the token with Cloudflare siteverify and sets an HMAC-signed HttpOnly cookie (1 day). Off unless `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are set.
+- `src/shield.js` — own bot/flood protection (Cloudflare Turnstile was removed at the owner's request). Per-IP in-memory rate limit (always on; per instance on Vercel). Proof-of-work gate when `SHIELD_SECRET` is set: page requests without a valid `uc_pass` cookie get `renderCheck` (page.js); browser finds a nonce so sha256(`challenge:nonce`) has `SHIELD_DIFFICULTY` (default 18) leading zero bits; `POST /shield/verify` checks it and sets an HMAC-signed, IP-bound HttpOnly cookie (1 day).
+- `src/sha256.js` — SHA-256 + zero-bit helper as source strings shipped to the browser for the puzzle (tested against Node crypto).
 - `src/logo.js` — logo as inline SVG (`currentColor`), generated from `assets/logo-source.svg`.
 - `assets/` — original design files (not served).
 - `.claude/launch.json` — local preview config (`npm start` on port 3000).

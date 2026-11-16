@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "build": "node --check server.js && node --check src/page.js && node --check src/logo.js && node --check src/turnstile.js",
+    "build": "node --check server.js && node --check src/page.js && node --check src/logo.js && node --check src/shield.js && node --check src/sha256.js",
     "test": "node --test"
   },
   "dependencies": {
