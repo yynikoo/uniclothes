@@ -328,6 +328,8 @@ const checkStyles = `
   .check p { margin: 0 0 24px; }
   #cf-widget { min-height: 65px; display: flex; justify-content: center; }
   #check-msg { margin-top: 16px; min-height: 1.5em; font-size: .95rem; }
+  #check-help { margin: 8px 0 0; font-size: .95rem; }
+  #check-help a { text-decoration: underline; text-underline-offset: 3px; }
 `;
 
 export function renderCheck(siteKey) {
@@ -355,10 +357,12 @@ export function renderCheck(siteKey) {
       <p class="muted">This only takes a moment.</p>
       <div id="cf-widget"></div>
       <div id="check-msg" class="muted" role="status"></div>
+      <p id="check-help" class="muted" hidden>Write <a href="mailto:uniclothessupport@proton.me">uniclothessupport@proton.me</a> for problems.</p>
     </div>
   </main>
   <script>
     function showMsg(text) { document.getElementById("check-msg").textContent = text; }
+    function showError(text) { showMsg(text); document.getElementById("check-help").hidden = false; }
     window.onTurnstileLoad = function () {
       turnstile.render("#cf-widget", {
         sitekey: ${key},
@@ -371,14 +375,14 @@ export function renderCheck(siteKey) {
             body: JSON.stringify({ token: token })
           }).then(function (r) {
             if (r.ok) { location.reload(); return; }
-            showMsg("Verification failed. Please try again.");
+            showError("Verification failed. Please try again.");
             turnstile.reset("#cf-widget");
           }).catch(function () {
-            showMsg("Network problem. Please try again.");
+            showError("Network problem. Please try again.");
             turnstile.reset("#cf-widget");
           });
         },
-        "error-callback": function () { showMsg("The check couldn't load. Refresh the page to try again."); }
+        "error-callback": function () { showError("The check couldn't load. Refresh the page to try again."); }
       });
     };
   </script>

@@ -41,6 +41,7 @@ test("visitors without a pass get the check page", async () => {
   assert.match(html, /Checking you're human/);
   assert.match(html, /challenges\.cloudflare\.com\/turnstile/);
   assert.match(html, /"test-site-key"/);
+  assert.match(html, /uniclothessupport@proton.me/);
   assert.ok(!html.includes("test-secret-key"), "secret must never reach the page");
 });
 
