@@ -318,6 +318,75 @@ export function renderHome() {
   });
 }
 
+// Cloudflare Turnstile check shown before the site (see src/turnstile.js). Uses the site's theme.
+const checkStyles = `
+  .check { text-align: center; }
+  .check-brand { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .check-brand svg { width: 34px; height: 34px; }
+  .check-brand .brand { display: inline; font-size: 1.3rem; }
+  .check h1 { font-size: clamp(1.6rem, 6vw, 2.2rem); margin: 0 0 8px; }
+  .check p { margin: 0 0 24px; }
+  #cf-widget { min-height: 65px; display: flex; justify-content: center; }
+  #check-msg { margin-top: 16px; min-height: 1.5em; font-size: .95rem; }
+`;
+
+export function renderCheck(siteKey) {
+  const key = JSON.stringify(siteKey).replace(/</g, "\\u003c");
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Checking your browser · UNICLOTHES</title>
+  <link rel="icon" id="favicon" type="image/svg+xml" href="/favicon-light.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>${styles}${checkStyles}</style>
+  ${headScript}
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
+</head>
+<body>
+  <main class="check">
+    <div>
+      <div class="check-brand">${logoSvg}<span class="brand">UNICLOTHES</span></div>
+      <h1>Checking you're human</h1>
+      <p class="muted">This only takes a moment.</p>
+      <div id="cf-widget"></div>
+      <div id="check-msg" class="muted" role="status"></div>
+    </div>
+  </main>
+  <script>
+    function showMsg(text) { document.getElementById("check-msg").textContent = text; }
+    window.onTurnstileLoad = function () {
+      turnstile.render("#cf-widget", {
+        sitekey: ${key},
+        theme: window.currentTheme(),
+        callback: function (token) {
+          showMsg("Verifying…");
+          fetch("/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: token })
+          }).then(function (r) {
+            if (r.ok) { location.reload(); return; }
+            showMsg("Verification failed. Please try again.");
+            turnstile.reset("#cf-widget");
+          }).catch(function () {
+            showMsg("Network problem. Please try again.");
+            turnstile.reset("#cf-widget");
+          });
+        },
+        "error-callback": function () { showMsg("The check couldn't load. Refresh the page to try again."); }
+      });
+    };
+  </script>
+  <noscript><p class="muted" style="text-align:center">Please turn on JavaScript to continue.</p></noscript>
+</body>
+</html>`;
+}
+
 // Placeholder pages for nav links that aren't built yet.
 export const placeholderPages = {
   "/market": "Market",

@@ -1,8 +1,13 @@
 import express from "express";
-import { renderHome, renderPlaceholder, placeholderPages } from "./src/page.js";
+import { renderHome, renderPlaceholder, renderCheck, placeholderPages } from "./src/page.js";
 import { logoSvg } from "./src/logo.js";
+import { turnstileGate, verifyHandler } from "./src/turnstile.js";
 
 const app = express();
+
+// Cloudflare Turnstile check before the site (only when TURNSTILE_* env vars are set).
+app.use(turnstileGate(renderCheck));
+app.post("/verify", express.json({ limit: "4kb" }), verifyHandler);
 
 // Favicons: the logo in black (light theme) or white (dark theme). Pages pick one to match the theme.
 const favicon = (color) =>

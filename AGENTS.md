@@ -8,6 +8,7 @@
 ## Layout
 - `server.js` — Express app and routes (`/`, `/market`, `/about`, `/contact`, `/register`, `/cart`, `/health`, `/favicon-light.svg`, `/favicon-dark.svg`); listens on `PORT` locally, exported for Vercel. Favicons are the logo recoloured black/white.
 - `src/page.js` — shared layout, home page, placeholder pages (inline CSS/JS, no static folder). Navbar is "liquid glass": fully transparent, backdrop blur, plus an SVG displacement filter (Chromium only, enabled via `html.liquid`). Owner wants NO extra colours, outlines or shadows on it. Navbar shows logo + "UNICLOTHES" wordmark (hidden under 600px) and a theme toggle: light/dark saved in localStorage `theme` (falls back to system), applied as `html[data-theme]` before paint, favicon swapped to match, circular reveal via View Transition. Tab switching uses cross-document View Transitions (`@view-transition`): the active `.pill` slides between tabs and page content fades.
+- `src/turnstile.js` — Cloudflare Turnstile gate: middleware shows the check page (`renderCheck` in page.js) to page requests without a valid `uc_verified` cookie; `POST /verify` checks the token with Cloudflare siteverify and sets an HMAC-signed HttpOnly cookie (1 day). Off unless `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are set.
 - `src/logo.js` — logo as inline SVG (`currentColor`), generated from `assets/logo-source.svg`.
 - `assets/` — original design files (not served).
 - `.claude/launch.json` — local preview config (`npm start` on port 3000).
