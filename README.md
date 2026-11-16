@@ -1,6 +1,6 @@
 # uniclothes
 
-A small Node.js (Express) website. Right now it shows a short loading animation and then "Hello Latvia 🇱🇻".
+A Node.js (Express) website for the uniclothes shop. Right now it has a glass navbar (Home, Market, About, Contact Us, Register, Cart) and a home page that shows a short loading animation and then "Hello Latvia 🇱🇻". The other pages are placeholders.
 
 ## Run locally
 

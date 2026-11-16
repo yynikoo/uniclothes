@@ -6,8 +6,11 @@
 - Tests: built-in `node:test` (`npm test`). Build check: `npm run build` (syntax check).
 
 ## Layout
-- `server.js` — Express app and routes; listens on `PORT` locally, exported for Vercel.
-- `src/page.js` — HTML for the home page (inline CSS/JS, no static folder).
+- `server.js` — Express app and routes (`/`, `/market`, `/about`, `/contact`, `/register`, `/cart`, `/health`); listens on `PORT` locally, exported for Vercel.
+- `src/page.js` — shared layout (glass navbar: transparent + backdrop blur), home page, placeholder pages (inline CSS/JS, no static folder).
+- `src/logo.js` — logo as inline SVG (`currentColor`), generated from `assets/logo-source.svg`.
+- `assets/` — original design files (not served).
+- `.claude/launch.json` — local preview config (`npm start` on port 3000).
 - `test/` — `node:test` tests.
 - `.env.example` — names of env vars (no values).
 - `vercel.json` — Vercel build + routing config.

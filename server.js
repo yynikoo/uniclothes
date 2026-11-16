@@ -1,11 +1,17 @@
 import express from "express";
-import { renderHome } from "./src/page.js";
+import { renderHome, renderPlaceholder, placeholderPages } from "./src/page.js";
 
 const app = express();
 
 app.get("/", (_req, res) => {
   res.type("html").send(renderHome());
 });
+
+for (const path of Object.keys(placeholderPages)) {
+  app.get(path, (_req, res) => {
+    res.type("html").send(renderPlaceholder(path));
+  });
+}
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
