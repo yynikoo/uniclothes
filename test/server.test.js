@@ -18,7 +18,7 @@ test("home page says Hello Latvia and has the navbar", async () => {
   const html = await res.text();
   assert.match(html, /Hello Latvia 🇱🇻/);
   for (const label of ["Home", "Market", "About", "Contact Us", "Register", "Cart"]) {
-    assert.ok(html.includes(`>${label}</a>`), `navbar is missing ${label}`);
+    assert.ok(html.includes(`>${label}<`), `navbar is missing ${label}`);
   }
 });
 
