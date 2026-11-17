@@ -106,6 +106,7 @@ function productCard(p, index) {
       <div class="card-them">
         <div class="card-brand">${p.brand}</div>
         <div class="card-price">${p.retail}$</div>
+        <div class="card-note">Not official reselling</div>
       </div>
       <div class="card-ours${p.plain ? " plain" : ""}">
         <div class="card-brand">unishop</div>
@@ -269,11 +270,19 @@ export const homeStyles = `
   .lv-pulse.p2 { animation-delay: 1.2s; }
   .lv-riga-label { font-size: 12px; font-weight: 500; fill: var(--ink); }
 
-  .home-only { position: absolute; left: calc(93 * var(--u)); top: calc(772 * var(--u)); width: calc(330 * var(--u)); z-index: 1; }
+  .home-only { position: absolute; left: calc(93 * var(--u)); top: calc(740 * var(--u)); width: calc(330 * var(--u)); z-index: 1; }
   .home-only h2 { margin: 0 0 calc(6 * var(--u)); font-weight: 400; font-size: calc(44 * var(--u)); letter-spacing: .01em; }
   .home-only p { margin: 0; font-size: calc(29 * var(--u)); line-height: 1.38; }
   .home-only > * { animation: rise .8s cubic-bezier(.2,.8,.2,1) both; animation-delay: .5s; }
   .home-only p { animation-delay: .6s; }
+  .home-only .disclaimer {
+    margin-top: calc(14 * var(--u)); font-size: max(11px, calc(15 * var(--u))); line-height: 1.38; color: #777;
+    animation-delay: .7s;
+  }
+  .card-note {
+    margin-top: calc(6 * var(--u) * var(--s)); font-size: max(10px, calc(19 * var(--u) * var(--s)));
+    color: #8a8a8a; letter-spacing: .01em; white-space: nowrap;
+  }
 
   /* Product cards */
   .card {
@@ -367,6 +376,8 @@ export const homeStyles = `
     .home-only { width: auto; padding: 24px 20px 0; max-width: 520px; margin: 0 auto; }
     .home-only h2 { font-size: 1.7rem; margin-bottom: 6px; }
     .home-only p { font-size: 1.1rem; }
+    .home-only .disclaimer { font-size: .8rem; margin-top: 14px; }
+    .card-note { font-size: .75rem; margin-top: 4px; }
   }
   @media (min-width: 901px) { .home-cards { display: contents; } }
 
@@ -395,6 +406,7 @@ export function homeBody() {
     <div class="home-only">
       <h2>ONLY LATVIA</h2>
       <p>We deliver only in latvia, we do not deliver our products to other countries</p>
+      <p class="disclaimer">Not official reselling. unishop is not affiliated with Nike, ASICS or Chrome Hearts. Official prices are shown only for price comparison.</p>
     </div>
 
     <div class="home-cards">

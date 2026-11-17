@@ -57,6 +57,8 @@ test("home shows 5 price-comparison cards and the animated Latvia map", async ()
   for (const [brand, retail, ours] of [["Nike Official", 130, 30], ["Chrome Hearts off", 119, 34], ["ASICS Official", 300, 40]]) {
     assert.ok(html.includes(`aria-label="${brand} ${retail}$, unishop ${ours}$"`), `card for ${brand}`);
   }
+  assert.equal((html.match(/<div class="card-note">Not official reselling<\/div>/g) || []).length, 5);
+  assert.match(html, /unishop is not affiliated with Nike, ASICS or Chrome Hearts/);
   assert.match(html, /class="lv-map"/);
   assert.match(html, /class="lv-outline" pathLength="1" d="M[\d.]+ [\d.]+ C/);
   assert.equal((html.match(/class="lv-city"/g) || []).length, 6);
