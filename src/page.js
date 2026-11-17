@@ -1,5 +1,5 @@
 // Page HTML for the site: a shared layout with a "liquid glass" navbar,
-// the home page (loading animation, then "Hello Latvia 🇱🇻"), and simple placeholder pages.
+// the home page (see src/home.js, always white theme), the shield check page and placeholder pages.
 //
 // Liquid glass: the navbar is see-through, blurs what's behind it and (in Chromium browsers)
 // bends it with an SVG displacement filter. Other browsers get the plain blur.
@@ -7,7 +7,7 @@
 // one and fade the page content. Browsers without View Transitions just load the page normally.
 import { logoSvg } from "./logo.js";
 import { sha256Source, zeroBitsSource } from "./sha256.js";
-import { shapeWavesClient } from "./shape-waves.js";
+import { homeStyles, homeBody, homeScript } from "./home.js";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -15,12 +15,6 @@ const navLinks = [
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact Us" },
 ];
-
-// The Latvian flag is also drawn as SVG because Windows doesn't render flag emoji.
-const flagSvg = `<svg class="flag" viewBox="0 0 20 10" aria-hidden="true">
-  <rect width="20" height="10" fill="#9E3039"/>
-  <rect y="4" width="20" height="2" fill="#fff"/>
-</svg>`;
 
 // Distortion filter used by the navbar's backdrop. The noise drifts slowly so the glass looks liquid.
 const liquidFilterSvg = `<svg class="defs" aria-hidden="true" focusable="false">
@@ -94,6 +88,7 @@ const styles = `
     border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; padding: 0;
     transition: transform .3s cubic-bezier(.34,1.56,.64,1), background-color .2s;
   }
+  html[data-force-theme] .theme-toggle { display: none; } /* pages locked to one theme */
   .theme-toggle:hover { background: var(--pill-bg); transform: rotate(-15deg); }
   .theme-toggle:active { transform: scale(.88); }
   .theme-toggle svg { width: 20px; height: 20px; }
@@ -170,57 +165,23 @@ const styles = `
     *, *::before, *::after { transition: none !important; }
   }
 
-  /* ---------- Home hero (ShapeWaves) ---------- */
-  .hero { position: relative; height: 100vh; height: 100svh; overflow: hidden; background: var(--bg); }
-  .shape-waves {
-    position: absolute; inset: 0; overflow: hidden; pointer-events: none; isolation: isolate;
-    background: var(--bg);
-  }
-  .shape-waves canvas {
-    position: absolute; inset: 0; display: block; width: 100%; height: 100%;
-    opacity: 0; transition: opacity 600ms cubic-bezier(.22,1,.36,1); pointer-events: none;
-  }
-  .shape-waves[data-ready="true"] canvas { opacity: 1; }
-  /* Title is for screen readers; it becomes visible only if WebGPU isn't available. */
-  .hero-title {
-    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; margin: 0;
-  }
-  .hero:has(.shape-waves[data-fallback="true"]) .hero-title {
-    position: absolute; inset: 0; width: auto; height: auto; clip-path: none; margin: auto;
-    display: grid; place-items: center; font-size: clamp(2.6rem, 11vw, 7.5rem); letter-spacing: .04em;
-  }
-  @media (prefers-reduced-motion: reduce) { .shape-waves canvas { transition: none; } }
-
   /* ---------- Page content ---------- */
   main { position: relative; z-index: 1; min-height: 100vh; display: grid; place-items: center; padding: 96px 16px 32px; text-align: center; }
-  h1, .hello-title { font-size: clamp(2.2rem, 8vw, 4.5rem); margin: 0 0 16px; font-weight: 600; }
+  h1 { font-size: clamp(2.2rem, 8vw, 4.5rem); margin: 0 0 16px; font-weight: 600; }
   .muted { color: var(--muted); }
-
-  /* Home loading animation (first visit in a session only) */
-  .loader { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-  .spinner {
-    width: 48px; height: 48px; border-radius: 50%;
-    border: 5px solid color-mix(in srgb, var(--red) 20%, transparent);
-    border-top-color: var(--red); animation: spin .8s linear infinite;
-  }
-  .hello { display: none; animation: pop .5s ease-out; }
-  .flag { width: 160px; height: 80px; border-radius: 6px; box-shadow: 0 6px 20px rgb(0 0 0 / .15); }
-  html.ready .loader { display: none; }
-  html.ready .hello { display: block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes pop { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
 `;
 
-// Runs in <head> before first paint: applies the saved theme and matching favicon (no flash),
-// turns on the liquid filter in Chromium (other engines don't support SVG filters in
-// backdrop-filter) and skips the home loader after the first visit.
+// Runs in <head> before first paint: applies the saved theme (or the page's forced theme, e.g. the
+// white-only home page) and matching favicon (no flash), and turns on the liquid filter in Chromium
+// (other engines don't support SVG filters in backdrop-filter).
 const headScript = `<script>
   (function () {
     var d = document.documentElement;
     var mq = matchMedia("(prefers-color-scheme: dark)");
     var saved = null;
     try { saved = localStorage.getItem("theme"); } catch (e) {}
-    if (saved === "light" || saved === "dark") d.dataset.theme = saved;
+    if (d.dataset.forceTheme) d.dataset.theme = d.dataset.forceTheme;
+    else if (saved === "light" || saved === "dark") d.dataset.theme = saved;
     window.currentTheme = function () { return d.dataset.theme || (mq.matches ? "dark" : "light"); };
     window.syncFavicon = function () {
       var icon = document.getElementById("favicon");
@@ -229,7 +190,6 @@ const headScript = `<script>
     window.syncFavicon();
     mq.addEventListener("change", window.syncFavicon);
     if (window.chrome && !/Firefox/.test(navigator.userAgent)) d.classList.add("liquid");
-    try { if (sessionStorage.getItem("seenLoader")) d.classList.add("ready"); } catch (e) {}
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       document.addEventListener("DOMContentLoaded", function () {
         document.querySelectorAll(".defs animate").forEach(function (a) { a.remove(); });
@@ -292,9 +252,10 @@ function nav(currentPath) {
   </header>`;
 }
 
-function layout({ title, currentPath, body }) {
+function layout({ title, currentPath, body, forceTheme = null, extraStyles = "" }) {
+  const themeAttrs = forceTheme ? ` data-force-theme="${forceTheme}" data-theme="${forceTheme}"` : "";
   return `<!doctype html>
-<html lang="en">
+<html lang="en"${themeAttrs}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -303,7 +264,7 @@ function layout({ title, currentPath, body }) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>${styles}</style>
+  <style>${styles}${extraStyles}</style>
   ${headScript}
 </head>
 <body>
@@ -315,61 +276,14 @@ function layout({ title, currentPath, body }) {
 </html>`;
 }
 
-// Home hero: ShapeWaves field with "UNICLOTHES" carved out. Settings from the React Bits example;
-// colours per theme (light = white field, dark = original look on the site's dark background).
-const shapeWavesOptions = {
-  id: "shape-waves",
-  text: "UNICLOTHES",
-  fontFamily: '"Prompt", system-ui, sans-serif',
-  fontWeight: 600,
-  textSize: 0.48,
-  shapes: "mixed",
-  cellSize: 6,
-  dotSize: 1,
-  speed: 1,
-  scale: 1,
-  contrast: 1,
-  brightness: 0.4,
-  flow: 0,
-  direction: 0,
-  fade: 0.25,
-  interactive: true,
-  splashRadius: 40,
-  splashStrength: 0.4,
-  intro: true,
-  introDuration: 2.3,
-  light: { background: "#ffffff", color: "#929292", hover: "#000000", glow: 0 },
-  dark: { background: "#0b0b0c", color: "#929292", hover: "#ffffff", glow: 0.35 },
-};
-
+// Home page: always white theme (the theme toggle is hidden there). Content lives in src/home.js.
 export function renderHome() {
   return layout({
     title: "UNICLOTHES",
     currentPath: "/",
-    body: `<section class="hero">
-    <div class="shape-waves" id="shape-waves" aria-hidden="true"><canvas></canvas></div>
-    <h1 class="hero-title">UNICLOTHES</h1>
-  </section>
-  <script>(${shapeWavesClient.toString()})(${JSON.stringify(shapeWavesOptions)});</script>
-  <main>
-    <div class="loader" role="status">
-      <div class="spinner"></div>
-      <div>Loading…</div>
-    </div>
-    <div class="hello">
-      <h2 class="hello-title">Hello Latvia 🇱🇻</h2>
-      ${flagSvg}
-    </div>
-  </main>
-  <script>
-    if (!document.documentElement.classList.contains("ready")) {
-      setTimeout(function () {
-        document.documentElement.classList.add("ready");
-        try { sessionStorage.setItem("seenLoader", "1"); } catch (e) {}
-      }, 1500);
-    }
-  </script>
-  <noscript><style>.loader{display:none}.hello{display:block}</style></noscript>`,
+    forceTheme: "light",
+    extraStyles: homeStyles,
+    body: `${homeBody()}${homeScript}`,
   });
 }
 

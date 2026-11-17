@@ -1,6 +1,6 @@
 # uniclothes
 
-A Node.js (Express) website for the uniclothes shop. Right now it has a liquid-glass navbar (UNICLOTHES logo, Home, Market, About, Contact Us, light/dark theme toggle, Register, Cart) and a home page with an animated ShapeWaves hero (WebGPU) that carves out "UNICLOTHES", then a short loading animation and then "Hello Latvia 🇱🇻". The other pages are placeholders.
+A Node.js (Express) website for the uniclothes shop. Right now it has a liquid-glass navbar (UNICLOTHES logo, Home, Market, About, Contact Us, light/dark theme toggle, Register, Cart) and a white-only home page ("Off you buy where it’s cheap", price-comparison product cards, animated Latvia delivery map). The other pages are placeholders.
 
 ## Run locally
 
@@ -14,6 +14,12 @@ npm run dev     # or: npm start
 Open http://localhost:3000.
 
 Checks: `npm run build` and `npm test`.
+
+### Product photos
+
+Put photos in `public/products/` with these names (any of .webp, .avif, .png, .jpg, .jpeg):
+`nike-slide-black`, `chrome-hearts-tee`, `nike-slide-white`, `asics-white-red`, `asics-black`.
+Cards without a photo show a drawn illustration.
 
 ## Deploy (Vercel)
 

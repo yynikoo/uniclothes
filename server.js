@@ -2,6 +2,7 @@ import express from "express";
 import { renderHome, renderPlaceholder, renderCheck, placeholderPages } from "./src/page.js";
 import { logoSvg } from "./src/logo.js";
 import { shieldGate, rateLimit, verifyHandler } from "./src/shield.js";
+import { PRODUCTS_DIR } from "./src/home.js";
 
 const app = express();
 
@@ -25,6 +26,9 @@ for (const [theme, svg] of Object.entries(favicons)) {
   });
 }
 app.get("/favicon.ico", (_req, res) => res.redirect(301, "/favicon-light.svg"));
+
+// Product photos (public/products, bundled into the Vercel function via vercel.json includeFiles).
+app.use("/products", express.static(PRODUCTS_DIR, { maxAge: "7d" }));
 
 app.get("/", (_req, res) => {
   res.type("html").send(renderHome());

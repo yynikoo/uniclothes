@@ -70,7 +70,7 @@ test("a solved challenge gives a pass cookie that unlocks the site", async () =>
 
   const page = await fetch(`${base}/`, { headers: { cookie: setCookie.split(";")[0] } });
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /Hello Latvia/);
+  assert.match(await page.text(), /Off you buy/);
 });
 
 test("wrong answers, forged challenges and forged cookies are rejected", async () => {
