@@ -21,6 +21,8 @@ Put photos in `public/products/` with these names (any of .webp, .avif, .png, .j
 `nike-slide-black`, `chrome-hearts-tee`, `nike-slide-white`, `asics-white-red`, `asics-black`.
 Cards without a photo show a drawn illustration.
 
+Current photos are the brands' official product images (Nike Mind 001 Flyknit Hyper Royal IR2175-400 and Light Smoke Grey HQ4307-003 from nike.com; ASICS Metaspeed Sky Tokyo 1013A162-102 and Novablast 6 1011C243-002 from asics.com). The Chrome Hearts tee has no photo yet.
+
 ## Deploy (Vercel)
 
 1. Import the GitHub repo `yynikoo/uniclothes` in Vercel.
