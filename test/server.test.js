@@ -57,16 +57,30 @@ test("home shows 4 price-comparison cards, ONLY LATVIA under the buttons, no map
   for (const [brand, retail, ours] of [["Nike Official", 130, 30], ["ASICS Official", 300, 40], ["Nike Official", 130, 80], ["Asics Official", 150, 45]]) {
     assert.ok(html.includes(`aria-label="${brand} ${retail}$, unishop ${ours}$"`), `card for ${brand} ${retail}`);
   }
-  assert.equal((html.match(/<div class="card-note">Not official reselling<\/div>/g) || []).length, 4);
+  assert.equal((html.match(/<div class="card-note">Not official reselling<\/div>/g) || []).length, 11, "on every card (4 hero + 7 grid)");
   assert.match(html, /unishop is not affiliated with Nike or ASICS/);
   assert.doesNotMatch(html, /Chrome Hearts|lv-map|animateMotion/);
   const head = html.split('<div class="home-head">')[1].split('<div class="home-cards">')[0];
   assert.ok(head.indexOf(">Register<") < head.indexOf("ONLY LATVIA"), "ONLY LATVIA comes right after the buttons");
 });
 
+test("More Nike grid has 7 cards with photos and names", async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /<section class="more"/);
+  assert.equal((html.match(/<a class="card g\d grid-card"/g) || []).length, 7);
+  for (const name of ["Nike Air Max Dn8", "Nike Shox TL", "Nike Air Force 1 '07", "Nike Air Max Plus"]) {
+    assert.ok(html.includes(`<div class="card-name">${name}</div>`), name);
+  }
+});
+
+test("unishop price sits in a right-aligned column, not beside the Save badge", async () => {
+  const html = await (await fetch(`${base}/`)).text();
+  assert.match(html, /\.card-ours \{ display: flex; flex-direction: column; align-items: flex-end;/);
+});
+
 test("product photos are used; photo URLs 404 cleanly", async () => {
   const html = await (await fetch(`${base}/`)).text();
-  assert.equal((html.match(/<div class="card-art"><img src="\/products\//g) || []).length, 4);
+  assert.equal((html.match(/<div class="card-art"><img src="\/products\//g) || []).length, 11);
   assert.equal((await fetch(`${base}/products/does-not-exist.png`)).status, 404);
 });
 

@@ -32,6 +32,18 @@ const products = [
   { id: "c4", photo: "asics-black", brand: "Asics Official", retail: 150, ours: 45, art: () => sneakerArt({ upper: "#1d1e21", collar: "#0f1012", mid: "#2a2b2f", sole: "#111214", accent: "#9a9ca3", accent2: "#c4c6cc", lace: "#3a3b40" }) },
 ];
 
+// "More Nike" grid under the hero. Official prices are nike.com US retail (Nov 2026);
+// unishop prices are placeholders until the owner sets real ones.
+const moreProducts = [
+  { id: "g1", photo: "nike-aj1-high-og", name: "Air Jordan 1 Retro High OG “Love Letter”", brand: "Nike Official", retail: 185, ours: 55 },
+  { id: "g2", photo: "nike-air-max-dn8", name: "Nike Air Max Dn8", brand: "Nike Official", retail: 210, ours: 60 },
+  { id: "g3", photo: "nike-shox-tl", name: "Nike Shox TL", brand: "Nike Official", retail: 180, ours: 50 },
+  { id: "g4", photo: "nike-air-max-95", name: "Nike Air Max 95 Big Bubble “OG”", brand: "Nike Official", retail: 190, ours: 55 },
+  { id: "g5", photo: "nike-vomero-5", name: "Nike Zoom Vomero 5", brand: "Nike Official", retail: 170, ours: 45 },
+  { id: "g6", photo: "nike-af1-07", name: "Nike Air Force 1 '07", brand: "Nike Official", retail: 115, ours: 35 },
+  { id: "g7", photo: "nike-air-max-plus", name: "Nike Air Max Plus", brand: "Nike Official", retail: 190, ours: 55 },
+].map((p) => ({ ...p, art: () => sneakerArt({ upper: "#f1f1f1", collar: "#d8d8d8", mid: "#ffffff", sole: "#dddddd", accent: "#bbbbbb", accent2: "#cccccc", lace: "#cfcfcf" }) }));
+
 // ---------- Product illustrations ----------
 function sneakerArt(c) {
   const laces = [0, 1, 2, 3, 4]
@@ -80,14 +92,15 @@ const scribble = (cls, viewBox = "0 0 100 16") => `<svg class="${cls}" viewBox="
   <path pathLength="1" d="M3 6 C28 2 70 2 97 5"/><path pathLength="1" d="M10 12 C36 9 66 9 90 11"/>
 </svg>`;
 
-function productCard(p, index) {
+function productCard(p, index, extraClass = "") {
   const image = findPhoto(p.photo);
   const art = image
     ? `<img src="${image}" alt="${p.brand}" loading="lazy" decoding="async">`
     : p.art();
   const save = p.retail - p.ours;
-  return `<a class="card ${p.id}" href="/market" style="--i:${index}" data-depth="${(0.4 + index * 0.18).toFixed(2)}"
-      aria-label="${p.brand} ${p.retail}$, unishop ${p.ours}$">
+  const label = `${p.name ? p.name + ": " : ""}${p.brand} ${p.retail}$, unishop ${p.ours}$`;
+  return `<a class="card ${p.id}${extraClass}" href="/market" style="--i:${index}" data-depth="${(0.4 + index * 0.18).toFixed(2)}"
+      aria-label="${label.replace(/"/g, "&quot;")}">
     <div class="card-top">
       <div class="card-them">
         <div class="card-brand">${p.brand}</div>
@@ -100,15 +113,16 @@ function productCard(p, index) {
         <div class="save">Save ${save}$</div>
       </div>
     </div>
+    ${p.name ? `<div class="card-name">${p.name}</div>` : ""}
     <div class="card-art">${art}</div>
   </a>`;
 }
 
 // ---------- Styles ----------
 export const homeStyles = `
+  .home, .more { --orange: #ff7f27; --blue: #2747a8; --ink: #111111; }
   .home {
     --u: calc(100vw / 1920);
-    --orange: #ff7f27; --blue: #2747a8; --ink: #111111;
     position: relative; height: max(100vh, calc(1080 * var(--u))); overflow: hidden;
     background: #fff; color: var(--ink);
   }
@@ -166,7 +180,6 @@ export const homeStyles = `
     transform: perspective(1200px) translate3d(var(--px), calc(var(--py) + var(--lift)), 0) rotateX(var(--rx)) rotateY(var(--ry));
     transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s;
     animation: card-in 1s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(.25s + var(--i) * .1s);
-    will-change: transform;
   }
   .card:hover, .card:focus-visible {
     --lift: calc(-10 * var(--u)); z-index: 20;
@@ -184,8 +197,11 @@ export const homeStyles = `
   }
   .card-brand { font-size: calc(38 * var(--u) * var(--s)); line-height: 1.15; letter-spacing: .01em; white-space: nowrap; }
   .card-price { position: relative; font-size: calc(48 * var(--u) * var(--s)); line-height: 1.12; font-weight: 500; }
-  .card-ours { text-align: right; }
-  .card-ours .card-price { color: var(--blue); display: inline-block; }
+  /* Column so the (hidden) Save badge never sits beside the price and pushes it left. */
+  .card-ours { display: flex; flex-direction: column; align-items: flex-end; text-align: right; flex: none; }
+  .card-them { min-width: 0; }
+  .card-them .card-brand { white-space: normal; }
+  .card-ours .card-price { color: var(--blue); }
   .card-ours.plain .card-price { color: var(--ink); }
   .price-line {
     position: absolute; left: -2%; bottom: -.16em; width: 104%; height: .3em; overflow: visible;
@@ -194,7 +210,7 @@ export const homeStyles = `
   .price-line path { animation-delay: calc(1.4s + var(--i) * .1s); }
   .price-line path + path { animation-delay: calc(1.55s + var(--i) * .1s); }
   .save {
-    display: inline-block; margin-top: calc(14 * var(--u) * var(--s)); padding: .25em .7em; border-radius: 999px;
+    margin-top: calc(14 * var(--u) * var(--s)); padding: .25em .7em; border-radius: 999px; white-space: nowrap;
     background: var(--orange); color: #fff; font-size: calc(22 * var(--u) * var(--s)); font-weight: 500;
     opacity: 0; transform: translateY(-6px) scale(.9); transition: opacity .25s, transform .3s cubic-bezier(.34,1.56,.64,1);
   }
@@ -212,9 +228,27 @@ export const homeStyles = `
   .c3 .card-art { align-items: center; } .c3 .card-art svg { width: 108%; transform: translate(6%, -4%); }
   .c4 .card-art { align-items: center; } .c4 .card-art svg { width: 112%; transform: translate(6%, 4%); }
   .card:hover .card-art svg, .card:hover .card-art img { transform: scale(1.06) rotate(-2deg); }
-  /* Photos: white backgrounds blend into the white card. */
-  .card-art img { width: 100%; height: 100%; max-height: none; object-fit: contain; object-position: center bottom; mix-blend-mode: multiply; }
+  /* Photos (white or transparent backgrounds). */
+  .card-art img { width: 100%; height: 100%; max-height: none; object-fit: contain; object-position: center bottom; }
   .c1 .card-art img, .c3 .card-art img, .c4 .card-art img { object-position: center; }
+
+  /* "More Nike" grid */
+  .more { --u: max(.8px, calc(100vw / 1920)); background: #fff; color: var(--ink); padding: calc(40 * var(--u)) calc(128 * var(--u)) calc(120 * var(--u)); }
+  .more h2 { margin: 0 0 calc(36 * var(--u)); font-weight: 400; font-size: calc(56 * var(--u)); letter-spacing: .01em; }
+  .more h2 .cheap { color: var(--orange); }
+  .more-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: calc(32 * var(--u)); }
+  .more .card {
+    --s: .72; position: relative; height: calc(500 * var(--u)); min-height: 380px;
+    animation: none; transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s, opacity .7s ease-out, translate .7s cubic-bezier(.2,.8,.2,1);
+  }
+  .more.reveal .card:not(.in) { opacity: 0; translate: 0 calc(60 * var(--u)); }
+  .more .card.in { transition-delay: 0s, 0s, calc(var(--i) * 70ms), calc(var(--i) * 70ms); }
+  .more .card-art { top: 46%; }
+  .more .card-art img { object-position: center; }
+  .card-name {
+    position: relative; z-index: 2; padding: calc(14 * var(--u) * var(--s)) calc(36 * var(--u) * var(--s)) 0;
+    font-size: calc(30 * var(--u) * var(--s)); font-weight: 500; line-height: 1.25;
+  }
 
   @keyframes rise { from { opacity: 0; transform: translateY(40%); } }
   @keyframes draw { to { stroke-dashoffset: 0; } }
@@ -249,7 +283,16 @@ export const homeStyles = `
   }
   @media (min-width: 901px) { .home-cards { display: contents; } }
 
+  @media (max-width: 900px) {
+    .more { padding: 8px 20px 56px; }
+    .more h2 { font-size: 1.7rem; margin-bottom: 18px; }
+    .more-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .more .card { height: 380px; border-radius: 28px; }
+    .card-name { font-size: 1rem; padding: 8px 24px 0; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    .more.reveal .card:not(.in) { opacity: 1; translate: none; }
     .home *, .home *::before, .home *::after { animation-duration: .01ms !important; animation-delay: 0s !important; }
   }
 `;
@@ -275,7 +318,14 @@ export function homeBody() {
     </div>
 
     <div class="home-cards">
-      ${products.map(productCard).join("")}
+      ${products.map((p, i) => productCard(p, i)).join("")}
+    </div>
+  </section>
+
+  <section class="more" aria-labelledby="more-title">
+    <h2 id="more-title">More Nike, <span class="cheap">cheaper</span></h2>
+    <div class="more-grid">
+      ${moreProducts.map((p, i) => productCard(p, i, " grid-card")).join("")}
     </div>
   </section>`;
 }
@@ -290,6 +340,8 @@ export const homeScript = `<script>
     var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     var desktop = matchMedia("(min-width: 901px) and (hover: hover)");
     var cards = Array.prototype.slice.call(home.querySelectorAll(".card"));
+    var allCards = Array.prototype.slice.call(document.querySelectorAll(".card"));
+    var more = document.querySelector(".more");
 
     // Price drop: count down from the official price to ours.
     function runDrop(el) {
@@ -305,18 +357,32 @@ export const homeScript = `<script>
       el.textContent = from + "$";
       requestAnimationFrame(step);
     }
-    var drops = home.querySelectorAll(".drop");
+    var drops = document.querySelectorAll(".drop");
     if ("IntersectionObserver" in window) {
       var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
           if (!e.isIntersecting) return;
           io.unobserve(e.target);
           var card = e.target.closest(".card");
-          var delay = card ? 700 + Number(getComputedStyle(card).getPropertyValue("--i")) * 100 : 0;
+          var i = card ? Number(getComputedStyle(card).getPropertyValue("--i")) || 0 : 0;
+          var delay = card && card.classList.contains("grid-card") ? 300 + i * 70 : 700 + i * 100;
           setTimeout(function () { runDrop(e.target); }, delay);
         });
       }, { threshold: 0.4 });
       drops.forEach(function (d) { d.textContent = d.dataset.from + "$"; io.observe(d); });
+    }
+
+    // Grid cards fade up as they scroll into view.
+    if (more && "IntersectionObserver" in window && !reduce) {
+      more.classList.add("reveal");
+      var revealIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add("in");
+          revealIO.unobserve(e.target);
+        });
+      }, { threshold: 0.15 });
+      more.querySelectorAll(".card").forEach(function (c) { revealIO.observe(c); });
     }
 
     if (reduce) return;
@@ -344,7 +410,7 @@ export const homeScript = `<script>
     });
 
     // Tilt the hovered card toward the cursor.
-    cards.forEach(function (c) {
+    allCards.forEach(function (c) {
       c.addEventListener("pointermove", function (e) {
         if (!desktop.matches) return;
         var r = c.getBoundingClientRect();
