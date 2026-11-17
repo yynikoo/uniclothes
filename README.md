@@ -1,6 +1,6 @@
 # uniclothes
 
-A Node.js (Express) website for the uniclothes shop. Right now it has a liquid-glass navbar (UNICLOTHES logo, Home, Market, About, Contact Us, light/dark theme toggle, Register, Cart) and a white-only home page ("Off you buy where it’s cheap", price-comparison product cards, animated Latvia delivery map). The other pages are placeholders.
+A Node.js (Express) website for the uniclothes shop. Right now it has a liquid-glass navbar (UNICLOTHES logo, Home, Market, About, Contact Us, light/dark theme toggle, Register, Cart) and a white-only home page ("Off you buy where it’s cheap", price-comparison product cards, "ONLY LATVIA" delivery note). The other pages are placeholders.
 
 ## Run locally
 
@@ -18,10 +18,10 @@ Checks: `npm run build` and `npm test`.
 ### Product photos
 
 Put photos in `public/products/` with these names (any of .webp, .avif, .png, .jpg, .jpeg):
-`nike-slide-black`, `chrome-hearts-tee`, `nike-slide-white`, `asics-white-red`, `asics-black`.
+`nike-slide-black`, `nike-slide-white`, `asics-white-red`, `asics-black`.
 Cards without a photo show a drawn illustration.
 
-Current photos are the brands' official product images (Nike Mind 001 Flyknit Hyper Royal IR2175-400 and Light Smoke Grey HQ4307-003 from nike.com; ASICS Metaspeed Sky Tokyo 1013A162-102 and Novablast 6 1011C243-002 from asics.com). The Chrome Hearts tee has no photo yet.
+Current photos are the brands' official product images (Nike Mind 001 Flyknit Hyper Royal IR2175-400 and Light Smoke Grey HQ4307-003 from nike.com; ASICS Metaspeed Sky Tokyo 1013A162-102 and Novablast 6 1011C243-002 from asics.com).
 
 ## Deploy (Vercel)
 

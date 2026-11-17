@@ -51,23 +51,22 @@ test("home is locked to the white theme", async () => {
   assert.match(other, /<html lang="en">/, "other pages keep the theme toggle");
 });
 
-test("home shows 5 price-comparison cards and the animated Latvia map", async () => {
+test("home shows 4 price-comparison cards, ONLY LATVIA under the buttons, no map or Chrome Hearts", async () => {
   const html = await (await fetch(`${base}/`)).text();
-  assert.equal((html.match(/<a class="card c\d"/g) || []).length, 5);
-  for (const [brand, retail, ours] of [["Nike Official", 130, 30], ["Chrome Hearts off", 119, 34], ["ASICS Official", 300, 40]]) {
-    assert.ok(html.includes(`aria-label="${brand} ${retail}$, unishop ${ours}$"`), `card for ${brand}`);
+  assert.equal((html.match(/<a class="card c\d"/g) || []).length, 4);
+  for (const [brand, retail, ours] of [["Nike Official", 130, 30], ["ASICS Official", 300, 40], ["Nike Official", 130, 80], ["Asics Official", 150, 45]]) {
+    assert.ok(html.includes(`aria-label="${brand} ${retail}$, unishop ${ours}$"`), `card for ${brand} ${retail}`);
   }
-  assert.equal((html.match(/<div class="card-note">Not official reselling<\/div>/g) || []).length, 5);
-  assert.match(html, /unishop is not affiliated with Nike, ASICS or Chrome Hearts/);
-  assert.match(html, /class="lv-map"/);
-  assert.match(html, /class="lv-outline" pathLength="1" d="M[\d.]+ [\d.]+ C/);
-  assert.equal((html.match(/class="lv-city"/g) || []).length, 6);
-  assert.match(html, /<animateMotion/);
+  assert.equal((html.match(/<div class="card-note">Not official reselling<\/div>/g) || []).length, 4);
+  assert.match(html, /unishop is not affiliated with Nike or ASICS/);
+  assert.doesNotMatch(html, /Chrome Hearts|lv-map|animateMotion/);
+  const head = html.split('<div class="home-head">')[1].split('<div class="home-cards">')[0];
+  assert.ok(head.indexOf(">Register<") < head.indexOf("ONLY LATVIA"), "ONLY LATVIA comes right after the buttons");
 });
 
-test("missing product photos fall back to drawings; photo URLs 404 cleanly", async () => {
+test("product photos are used; photo URLs 404 cleanly", async () => {
   const html = await (await fetch(`${base}/`)).text();
-  assert.ok((html.match(/<div class="card-art">(<svg|<img)/g) || []).length === 5);
+  assert.equal((html.match(/<div class="card-art"><img src="\/products\//g) || []).length, 4);
   assert.equal((await fetch(`${base}/products/does-not-exist.png`)).status, 404);
 });
 
